@@ -35,6 +35,12 @@ marked.setOptions({ breaks: true, gfm: true });
 document.addEventListener('DOMContentLoaded', async () => {
   initColorSwatches();
   await Promise.all([loadCategories(), loadManuals()]);
+
+  // Toolbar state: track cursor position in editor
+  const ta = document.getElementById('editContent');
+  ta.addEventListener('keyup',   updateToolbarState);
+  ta.addEventListener('mouseup', updateToolbarState);
+  ta.addEventListener('click',   updateToolbarState);
 });
 
 // ─── API Layer ────────────────────────────────────────────────────────────────
@@ -274,16 +280,21 @@ function setEditorMode(mode) {
   const preview  = document.getElementById('editPreview');
   const tabEdit  = document.getElementById('tab-edit');
   const tabPrev  = document.getElementById('tab-preview');
+  const toolbar  = document.getElementById('formatToolbar');
 
   if (mode === 'preview') {
     preview.innerHTML = textarea.value ? marked.parse(textarea.value) : '<p style="color:#94A3B8">内容がありません</p>';
-    textarea.style.display = 'none';
-    preview.style.display  = '';
+    textarea.style.display    = 'none';
+    preview.style.display     = '';
+    toolbar.style.opacity     = '0.4';
+    toolbar.style.pointerEvents = 'none';
     tabEdit.classList.remove('active');
     tabPrev.classList.add('active');
   } else {
-    textarea.style.display = '';
-    preview.style.display  = 'none';
+    textarea.style.display    = '';
+    preview.style.display     = 'none';
+    toolbar.style.opacity     = '';
+    toolbar.style.pointerEvents = '';
     tabEdit.classList.add('active');
     tabPrev.classList.remove('active');
     textarea.focus();
@@ -324,6 +335,86 @@ async function saveManual() {
   }
 }
 
+// ─── Format Toolbar ───────────────────────────────────────────────────────────
+
+function applyBlockFormat(type) {
+  const ta    = document.getElementById('editContent');
+  const value = ta.value;
+  const start = ta.selectionStart;
+  const end   = ta.selectionEnd;
+
+  // Find boundaries of selected lines
+  const lineStart  = value.lastIndexOf('\n', start - 1) + 1;
+  const lineEndIdx = value.indexOf('\n', end);
+  const lineEnd    = lineEndIdx === -1 ? value.length : lineEndIdx;
+
+  const lines = value.slice(lineStart, lineEnd).split('\n');
+  const prefixMap = { h1: '# ', h2: '## ', h3: '### ', h4: '#### ', body: '' };
+
+  const newLines = lines.map(line => {
+    // Strip existing heading prefix and caption wrapper
+    let stripped = line.replace(/^#{1,6} /, '');
+    stripped = stripped.replace(/^<p class="caption">(.*?)<\/p>$/, '$1');
+
+    if (type === 'caption') {
+      return `<p class="caption">${stripped}</p>`;
+    }
+    return (prefixMap[type] ?? '') + stripped;
+  });
+
+  const newBlock = newLines.join('\n');
+  ta.value = value.slice(0, lineStart) + newBlock + value.slice(lineEnd);
+  ta.setSelectionRange(lineStart, lineStart + newBlock.length);
+  ta.focus();
+  updateToolbarState();
+}
+
+function applyInlineFormat(type) {
+  const ta       = document.getElementById('editContent');
+  const start    = ta.selectionStart;
+  const end      = ta.selectionEnd;
+  const selected = ta.value.slice(start, end);
+
+  const wrapMap = {
+    bold:   ['**', '**'],
+    italic: ['*', '*'],
+    mark:   ['<mark>', '</mark>'],
+  };
+  const [open, close] = wrapMap[type];
+
+  const replacement = open + selected + close;
+  ta.value = ta.value.slice(0, start) + replacement + ta.value.slice(end);
+
+  // Keep selection on the wrapped text, or position cursor between markers
+  if (selected) {
+    ta.setSelectionRange(start, start + replacement.length);
+  } else {
+    ta.setSelectionRange(start + open.length, start + open.length);
+  }
+  ta.focus();
+}
+
+function updateToolbarState() {
+  const ta    = document.getElementById('editContent');
+  const value = ta.value;
+  const start = ta.selectionStart;
+
+  const lineStart  = value.lastIndexOf('\n', start - 1) + 1;
+  const lineEndIdx = value.indexOf('\n', start);
+  const line = value.slice(lineStart, lineEndIdx === -1 ? value.length : lineEndIdx);
+
+  let current = 'body';
+  if      (/^#### /.test(line)) current = 'h4';
+  else if (/^### /.test(line))  current = 'h3';
+  else if (/^## /.test(line))   current = 'h2';
+  else if (/^# /.test(line))    current = 'h1';
+  else if (/^<p class="caption">/.test(line)) current = 'caption';
+
+  document.querySelectorAll('.toolbar-btn[data-format]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.format === current);
+  });
+}
+
 // ─── Category Management ──────────────────────────────────────────────────────
 
 function openCategoryModal() {
@@ -343,7 +434,7 @@ async function createCategory() {
     showToast('カテゴリ名を入力してください', 'error');
     return;
   }
-  const icon  = document.getElementById('catIcon').value.trim() || '📁';
+  const icon  = document.getElementById('catIcon').value.trim() || '■';
   const color = state.selectedColor;
 
   try {
@@ -449,7 +540,7 @@ async function runOCR() {
     showToast(e.message || 'OCRに失敗しました', 'error');
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '🔍 テキストを読み取る';
+    btn.innerHTML = 'テキストを読み取る';
   }
 }
 
