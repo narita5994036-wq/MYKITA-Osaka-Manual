@@ -1,4 +1,4 @@
-name: Auto Merge Claude Branch to Master
+name: Auto Merge Claude Branch to Main
 
 on:
   push:
@@ -10,7 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
 
     steps:
       - name: Checkout repository
@@ -24,24 +23,24 @@ jobs:
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
 
-      - name: Merge to master
+      - name: Merge to main
         run: |
           BRANCH="${{ github.ref_name }}"
-          echo "Merging $BRANCH into master"
+          echo "Merging $BRANCH into main"
 
           # Fetch all branches
-          git fetch origin master
+          git fetch origin main
 
-          # Switch to master
-          git checkout master
+          # Switch to main
+          git checkout main
 
           # Merge the claude branch
-          git merge --no-ff "origin/$BRANCH" -m "Auto merge: $BRANCH → master
+          git merge --no-ff "origin/$BRANCH" -m "Auto merge: $BRANCH → main
 
           Triggered by push to $BRANCH
           Commit: ${{ github.sha }}"
 
-          # Push to master
-          git push origin master
+          # Push to main
+          git push origin main
 
-          echo "Successfully merged $BRANCH into master"
+          echo "Successfully merged $BRANCH into main"
