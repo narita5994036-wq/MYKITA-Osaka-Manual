@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>業務マニュアル管理</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+<div class="app">
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">📚</span>
+      <span class="logo-text">業務マニュアル</span>
+    </div>
+
+    <button class="btn-new" onclick="openCreateModal()">
+      <span>＋</span> 新規作成
+    </button>
+
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="search" id="searchInput" placeholder="マニュアルを検索..." oninput="debounceSearch(this.value)">
+    </div>
+
+    <nav class="sidebar-nav">
+      <p class="nav-label">カテゴリ</p>
+      <div class="nav-item active" id="nav-all" onclick="filterCategory(null)">
+        <span>📚 すべて</span>
+        <span class="badge" id="badge-all">0</span>
+      </div>
+      <div id="categoryList"></div>
+      <button class="nav-add-cat" onclick="openCategoryModal()">
+        ＋ カテゴリを追加
+      </button>
+    </nav>
+  </aside>
+
+  <!-- ═══ MAIN ═══ -->
+  <main class="main">
+    <div class="main-header">
+      <h2 id="pageTitle">すべてのマニュアル</h2>
+      <div class="view-btns">
+        <button id="btn-grid" class="view-btn active" onclick="setView('grid')" title="グリッド表示">⊞</button>
+        <button id="btn-list" class="view-btn" onclick="setView('list')" title="リスト表示">☰</button>
+      </div>
+    </div>
+
+    <div id="manualGrid" class="manual-grid"></div>
+
+    <div id="emptyState" class="empty-state" style="display:none">
+      <div class="empty-icon">📝</div>
+      <p>マニュアルがまだありません</p>
+      <button class="btn-primary" onclick="openCreateModal()">最初のマニュアルを作成する</button>
+    </div>
+  </main>
+</div>
+
+<!-- ═══ DETAIL MODAL ═══ -->
+<div class="overlay" id="detailOverlay" style="display:none" onclick="overlayClick(event,'detailOverlay')">
+  <div class="modal modal-detail">
+    <div class="modal-topbar">
+      <span id="detail-cat-badge" class="cat-badge"></span>
+      <div class="modal-actions">
+        <button class="icon-btn" onclick="editCurrentManual()" title="編集">✏️</button>
+        <button class="icon-btn icon-btn-danger" onclick="deleteCurrentManual()" title="削除">🗑️</button>
+        <button class="icon-btn" onclick="closeModal('detailOverlay')" title="閉じる">✕</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <h1 id="detail-title" class="detail-title"></h1>
+      <div id="detail-tags" class="detail-tags"></div>
+      <small id="detail-date" class="detail-date"></small>
+      <hr class="divider">
+      <div id="detail-content" class="markdown-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EDIT / CREATE MODAL ═══ -->
+<div class="overlay" id="editOverlay" style="display:none" onclick="overlayClick(event,'editOverlay')">
+  <div class="modal modal-edit">
+    <div class="modal-topbar">
+      <h2 id="editModalTitle" class="modal-title">新規マニュアル作成</h2>
+      <button class="icon-btn" onclick="closeModal('editOverlay')">✕</button>
+    </div>
+    <div class="modal-body edit-body">
+
+      <div class="form-group">
+        <label class="form-label">タイトル <span class="required">*</span></label>
+        <input type="text" id="editTitle" class="form-input" placeholder="マニュアルのタイトルを入力">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">カテゴリ</label>
+          <select id="editCategory" class="form-input form-select">
+            <option value="">カテゴリなし</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">タグ（スペースまたはカンマ区切り）</label>
+          <input type="text" id="editTags" class="form-input" placeholder="例: 重要　新人研修　接客">
+        </div>
+      </div>
+
+      <div class="form-group editor-group">
+        <div class="editor-header">
+          <label class="form-label">内容</label>
+          <div class="editor-tabs">
+            <button class="editor-tab active" id="tab-edit" onclick="setEditorMode('edit')">編集</button>
+            <button class="editor-tab" id="tab-preview" onclick="setEditorMode('preview')">プレビュー</button>
+          </div>
+        </div>
+        <textarea id="editContent" class="form-textarea" placeholder="Markdown形式で記入できます&#10;&#10;## 見出し&#10;- 箇条書き&#10;**太字** *斜体*"></textarea>
+        <div id="editPreview" class="markdown-body preview-area" style="display:none"></div>
+      </div>
+
+      <!-- OCR Section -->
+      <div class="form-group">
+        <label class="form-label">📸 手書きメモの取り込み</label>
+        <div class="ocr-zone" id="ocrZone"
+             ondragover="handleDragOver(event)"
+             ondragleave="handleDragLeave(event)"
+             ondrop="handleDrop(event)">
+          <div id="ocrEmpty" class="ocr-empty">
+            <span class="ocr-icon">📷</span>
+            <p>スキャン画像をドラッグ&ドロップ</p>
+            <p class="muted-text">または</p>
+            <label class="btn-secondary" for="ocrFileInput">ファイルを選択</label>
+            <input type="file" id="ocrFileInput" accept="image/*" style="display:none" onchange="handleOCRFile(this.files[0])">
+          </div>
+          <div id="ocrLoaded" style="display:none">
+            <img id="ocrPreviewImg" class="ocr-preview-img" alt="プレビュー">
+            <div class="ocr-controls">
+              <button class="btn-primary" id="ocrRunBtn" onclick="runOCR()">🔍 テキストを読み取る</button>
+              <button class="btn-secondary" onclick="clearOCR()">✕ クリア</button>
+            </div>
+          </div>
+          <div id="ocrResult" style="display:none" class="ocr-result">
+            <div class="ocr-result-header">
+              <span class="ocr-result-label">読み取り結果</span>
+              <button class="btn-primary btn-sm" onclick="insertOCRText()">エディタに挿入</button>
+            </div>
+            <pre id="ocrResultText" class="ocr-result-text"></pre>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /modal-body -->
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('editOverlay')">キャンセル</button>
+      <button class="btn-primary" onclick="saveManual()">💾 保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CATEGORY MODAL ═══ -->
+<div class="overlay" id="catOverlay" style="display:none" onclick="overlayClick(event,'catOverlay')">
+  <div class="modal modal-small">
+    <div class="modal-topbar">
+      <h2 class="modal-title">カテゴリを追加</h2>
+      <button class="icon-btn" onclick="closeModal('catOverlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">カテゴリ名</label>
+        <input type="text" id="catName" class="form-input" placeholder="例: 接客マナー">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">アイコン</label>
+          <input type="text" id="catIcon" class="form-input icon-input" placeholder="📁" maxlength="2">
+        </div>
+        <div class="form-group">
+          <label class="form-label">カラー</label>
+          <div class="color-swatches" id="colorSwatches"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('catOverlay')">キャンセル</button>
+      <button class="btn-primary" onclick="createCategory()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CONFIRM DIALOG ═══ -->
+<div class="overlay" id="confirmOverlay" style="display:none">
+  <div class="modal modal-confirm">
+    <div class="modal-body">
+      <p id="confirmMsg" class="confirm-msg"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('confirmOverlay')">キャンセル</button>
+      <button class="btn-danger" id="confirmOkBtn">削除する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div id="toast" class="toast"></div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>
