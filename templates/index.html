@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>業務マニュアル管理</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/style.css">
@@ -11,8 +11,16 @@
 <body>
 <div class="app">
 
+  <!-- ═══ MOBILE HEADER ═══ -->
+  <div class="mobile-header">
+    <button class="hamburger" onclick="openSidebar()" aria-label="メニューを開く">☰</button>
+    <span class="logo-text">業務マニュアル</span>
+    <button class="btn-new" onclick="openCreateModal()">＋ 新規</button>
+  </div>
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
   <!-- ═══ SIDEBAR ═══ -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="appSidebar">
     <div class="sidebar-logo">
       <span class="logo-icon">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
