@@ -174,6 +174,7 @@ function filterCategory(catId) {
   const cat = state.categories.find(c => c.id === catId);
   document.getElementById('pageTitle').textContent = cat ? `${cat.icon} ${cat.name}` : 'すべてのマニュアル';
 
+  if (window.innerWidth <= 767) closeSidebar();
   loadManuals();
 }
 
@@ -564,6 +565,20 @@ function clearOCR() {
   document.getElementById('ocrEmpty').style.display  = '';
   document.getElementById('ocrLoaded').style.display = 'none';
   document.getElementById('ocrResult').style.display = 'none';
+}
+
+// ─── Mobile Sidebar ───────────────────────────────────────────────────────────
+
+function openSidebar() {
+  document.getElementById('appSidebar').classList.add('open');
+  document.getElementById('sidebarBackdrop').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSidebar() {
+  document.getElementById('appSidebar').classList.remove('open');
+  document.getElementById('sidebarBackdrop').classList.remove('visible');
+  document.body.style.overflow = '';
 }
 
 // ─── Modal Helpers ────────────────────────────────────────────────────────────
