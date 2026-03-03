@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="業務マニュアル">
+<meta name="theme-color" content="#f5f4f2">
+<title>業務マニュアル</title>
+<style>
+/* ─── Reset ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+
+/* ─── Design Tokens (shift-manager inspired) ─────────────────── */
+:root {
+  --bg:     #f5f4f2;
+  --card:   #ffffff;
+  --bd:     #e0dedd;
+  --text:   #111111;
+  --sub:    #888888;
+  --light:  #aaaaaa;
+
+  /* Category accent colors */
+  --c0: #c9a84c;   /* amber  */
+  --c1: #2d6a4f;   /* green  */
+  --c2: #c0392b;   /* red    */
+  --c3: #2980b9;   /* blue   */
+  --c4: #8e44ad;   /* purple */
+  --c5: #e67e22;   /* orange */
+  --c6: #16a085;   /* teal   */
+  --c7: #7f8c8d;   /* gray   */
+
+  --st: env(safe-area-inset-top,    0px);
+  --sb: env(safe-area-inset-bottom, 0px);
+  --tab-h: 56px;
+}
+
+/* ─── Typography ─────────────────────────────────────────────── */
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial,
+               "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  height: 100dvh;
+}
+
+/* ─── Screen System ──────────────────────────────────────────── */
+.screen {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  transform: translateX(100%);
+  transition: transform .28s cubic-bezier(.4,0,.2,1);
+  display: flex; flex-direction: column;
+  z-index: 10;
+}
+.screen.active { transform: translateX(0); }
+#homeScreen    { transform: none; z-index: 0; }
+
+/* ─── Header ─────────────────────────────────────────────────── */
+.hd {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: calc(var(--st) + 14px) 20px 14px;
+  background: var(--card);
+  border-bottom: 1px solid var(--bd);
+  flex-shrink: 0;
+}
+.hd-title {
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+.hd-sub   { font-size: 11px; color: var(--light); margin-top: 1px; letter-spacing: 0.06em; }
+
+.nav-hd {
+  display: flex; align-items: center; gap: 8px;
+  padding: calc(var(--st) + 14px) 20px 14px;
+  background: var(--card);
+  border-bottom: 1px solid var(--bd);
+  flex-shrink: 0;
+}
+.nav-title {
+  flex: 1; text-align: center;
+  font-size: 14px; font-weight: 400;
+  letter-spacing: 0.06em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.back-btn {
+  background: none; border: none;
+  color: var(--sub); font-size: 13px;
+  font-family: inherit; letter-spacing: 0.04em;
+  cursor: pointer; min-width: 56px; padding: 4px 0;
+}
+.nav-acts { display: flex; min-width: 56px; justify-content: flex-end; gap: 4px; }
+.ico-btn {
+  background: none; border: none;
+  font-size: 18px; cursor: pointer;
+  padding: 6px; border-radius: 4px;
+  color: var(--sub); transition: color .15s;
+}
+.ico-btn:active { opacity: .6; }
+.btn-cancel {
+  background: none; border: none;
+  color: var(--light); font-size: 13px;
+  font-family: inherit; letter-spacing: 0.04em;
+  cursor: pointer; min-width: 56px;
+}
+.btn-save {
+  background: none; border: none;
+  color: var(--text); font-size: 13px;
+  font-weight: 500; font-family: inherit;
+  letter-spacing: 0.04em;
+  cursor: pointer; min-width: 56px; text-align: right;
+}
+
+/* ─── Search ─────────────────────────────────────────────────── */
+.search-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 20px;
+  background: var(--card);
+  border-bottom: 1px solid var(--bd);
+  flex-shrink: 0;
+}
+.search-row input {
+  flex: 1; padding: 8px 0;
+  background: none; border: none;
+  border-bottom: 1px solid var(--bd);
+  font-size: 13px; font-family: inherit;
+  font-weight: 300; letter-spacing: 0.02em;
+  color: var(--text); outline: none;
+}
+.search-row input::placeholder { color: var(--light); }
+
+/* ─── Category Chips ─────────────────────────────────────────── */
+.chips {
+  display: flex; gap: 6px;
+  padding: 10px 20px;
+  background: var(--card);
+  border-bottom: 1px solid var(--bd);
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; flex-shrink: 0;
+}
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  white-space: nowrap; padding: 4px 12px;
+  border-radius: 2px; border: 1px solid var(--bd);
+  background: none; font-size: 11px;
+  font-family: inherit; letter-spacing: 0.06em;
+  cursor: pointer; color: var(--light);
+  transition: all .15s; font-weight: 400;
+}
+.chip.on { background: var(--text); border-color: var(--text); color: #fff; }
+
+/* ─── Manual List ────────────────────────────────────────────── */
+.list {
+  flex: 1; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(var(--sb) + var(--tab-h));
+}
+.list-section { padding: 8px 0; }
+.list-header  { padding: 12px 20px 4px; font-size: 10px; color: var(--light); letter-spacing: 0.12em; }
+
+/* Card */
+.card {
+  display: flex; align-items: stretch;
+  background: var(--card);
+  border-top: 1px solid var(--bd);
+  cursor: pointer;
+  transition: background .1s;
+}
+.card:last-child { border-bottom: 1px solid var(--bd); }
+.card:active { background: #f0efed; }
+.card-accent {
+  width: 3px; flex-shrink: 0;
+  background: var(--light);
+  border-radius: 0;
+}
+.card-body { flex: 1; padding: 14px 16px 14px 14px; display: flex; flex-direction: column; gap: 5px; }
+.card-cat  { font-size: 10px; color: var(--sub); letter-spacing: 0.08em; }
+.card-title{ font-size: 14px; font-weight: 400; line-height: 1.4; letter-spacing: 0.02em; }
+.card-excerpt {
+  font-size: 12px; color: var(--sub); line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.card-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 2px; }
+.card-tags { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; }
+.tag       { font-size: 10px; color: var(--sub); letter-spacing: 0.04em; }
+.tag::before { content: "#"; }
+.card-date { font-size: 10px; color: var(--light); white-space: nowrap; letter-spacing: 0.04em; }
+.card-arrow{ color: var(--light); font-size: 12px; flex-shrink: 0; }
+
+/* ─── Empty ──────────────────────────────────────────────────── */
+.empty {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px; padding: 80px 24px;
+  text-align: center;
+}
+.empty-ico { font-size: 40px; opacity: .3; }
+.empty p   { font-size: 13px; color: var(--light); letter-spacing: 0.04em; }
+.empty .btn-line { margin-top: 8px; }
+
+/* ─── Bottom Tab Bar ─────────────────────────────────────────── */
+.tab-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: calc(var(--tab-h) + var(--sb));
+  padding-bottom: var(--sb);
+  background: var(--card);
+  border-top: 1px solid var(--bd);
+  display: flex;
+  z-index: 5;
+}
+.tab-item {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 3px;
+  background: none; border: none;
+  cursor: pointer; font-family: inherit;
+  font-size: 9px; letter-spacing: 0.08em; font-weight: 400;
+  color: var(--light); transition: color .15s;
+}
+.tab-item.on { color: var(--text); }
+.tab-ico { font-size: 19px; line-height: 1; }
+
+/* New button in tab bar */
+.tab-create {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  background: none; border: none; cursor: pointer;
+  font-size: 24px; color: var(--sub); padding-bottom: 2px;
+  transition: opacity .15s;
+}
+.tab-create:active { opacity: .5; }
+
+/* ─── Screen Body ────────────────────────────────────────────── */
+.screen-body {
+  flex: 1; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 24px 20px;
+  padding-bottom: calc(var(--sb) + 24px);
+}
+
+/* ─── Detail ─────────────────────────────────────────────────── */
+.detail-head  { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.detail-cat   { font-size: 10px; letter-spacing: 0.08em; color: var(--sub); }
+.detail-title { font-size: 20px; font-weight: 400; line-height: 1.4; margin: 6px 0; letter-spacing: 0.02em; }
+.detail-meta  { font-size: 11px; color: var(--light); margin-bottom: 4px; letter-spacing: 0.04em; }
+.detail-tags  { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 16px; }
+.detail-tag   { font-size: 11px; color: var(--sub); letter-spacing: 0.04em; }
+.detail-tag::before { content: "#"; }
+.divider      { border: none; border-top: 1px solid var(--bd); margin: 16px 0; }
+
+/* ─── Markdown ───────────────────────────────────────────────── */
+.md { font-size: 14px; line-height: 1.85; font-weight: 300; }
+.md h1 { font-size: 18px; font-weight: 400; margin: 18px 0 8px; letter-spacing: 0.04em; border-bottom: 1px solid var(--bd); padding-bottom: 6px; }
+.md h2 { font-size: 15px; font-weight: 400; margin: 16px 0 6px; letter-spacing: 0.04em; border-bottom: 1px solid var(--bd); padding-bottom: 4px; }
+.md h3 { font-size: 13px; font-weight: 500; margin: 14px 0 4px; letter-spacing: 0.04em; }
+.md p  { margin: 8px 0; }
+.md ul, .md ol { padding-left: 20px; margin: 8px 0; }
+.md li { margin: 4px 0; }
+.md code { background: #f0efed; border-radius: 2px; padding: 1px 5px; font-size: 12px; font-family: monospace; }
+.md pre  { background: #1a1a1a; color: #e0dedd; border-radius: 4px; padding: 14px; overflow-x: auto; margin: 12px 0; }
+.md pre code { background: none; color: inherit; }
+.md blockquote { border-left: 2px solid var(--bd); padding: 4px 12px; color: var(--sub); margin: 10px 0; }
+.md strong { font-weight: 500; }
+.md em     { font-style: italic; }
+.md a      { color: var(--text); text-decoration: underline; }
+.md table  { border-collapse: collapse; width: 100%; margin: 12px 0; display: block; overflow-x: auto; }
+.md th, .md td { border: 1px solid var(--bd); padding: 7px 10px; text-align: left; }
+.md th     { background: #f5f4f2; font-weight: 500; }
+.md hr     { border: none; border-top: 1px solid var(--bd); margin: 14px 0; }
+
+/* ─── Edit Form ──────────────────────────────────────────────── */
+.edit-body   { display: flex; flex-direction: column; gap: 0; }
+.form-row    { border-bottom: 1px solid var(--bd); padding: 16px 0; }
+.form-label  { font-size: 10px; color: var(--light); letter-spacing: 0.1em; margin-bottom: 6px; }
+.form-2col   { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.fi {
+  width: 100%; background: none; border: none;
+  border-bottom: 1px solid var(--bd);
+  font-size: 14px; font-family: inherit;
+  font-weight: 300; letter-spacing: 0.02em;
+  color: var(--text); outline: none; padding: 6px 0;
+  transition: border-color .15s;
+}
+.fi:focus { border-color: var(--text); }
+.fi::placeholder { color: var(--light); }
+.fi-sel {
+  width: 100%; background: none; border: none;
+  border-bottom: 1px solid var(--bd);
+  font-size: 14px; font-family: inherit;
+  font-weight: 300; letter-spacing: 0.02em;
+  color: var(--text); outline: none; padding: 6px 0;
+  -webkit-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23aaaaaa'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 0 center;
+  padding-right: 14px; cursor: pointer;
+}
+.fi-ta {
+  width: 100%; background: none; border: none;
+  border-bottom: 1px solid var(--bd);
+  font-size: 13px; font-family: "Courier New", monospace;
+  font-weight: 300; color: var(--text);
+  outline: none; padding: 6px 0; resize: none;
+  min-height: 200px; line-height: 1.7; letter-spacing: 0;
+}
+.fi-ta:focus { border-color: var(--text); }
+.fi-ta::placeholder { color: var(--light); }
+
+/* Editor tabs */
+.ed-tabs  { display: flex; gap: 0; border-bottom: 1px solid var(--bd); }
+.ed-tab   { padding: 10px 14px 9px; font-size: 11px; letter-spacing: 0.08em; font-family: inherit; background: none; border: none; cursor: pointer; color: var(--light); border-bottom: 1.5px solid transparent; margin-bottom: -1px; }
+.ed-tab.on{ color: var(--text); border-bottom-color: var(--text); }
+.preview-area { min-height: 200px; padding: 12px 0; }
+
+/* ─── OCR ────────────────────────────────────────────────────── */
+.ocr-zone { border: 1px dashed var(--bd); border-radius: 4px; padding: 20px; margin-top: 8px; }
+.ocr-empty { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.ocr-hint  { font-size: 12px; color: var(--light); letter-spacing: 0.04em; }
+.ocr-img   { max-width: 100%; max-height: 180px; display: block; margin: 0 auto 14px; border-radius: 2px; }
+.ocr-btns  { display: flex; gap: 10px; justify-content: center; }
+.ocr-rb    { font-size: 11px; color: var(--sub); letter-spacing: 0.06em; margin: 12px 0 6px; display: flex; justify-content: space-between; align-items: center; }
+.ocr-pre   { font-size: 12px; font-family: inherit; white-space: pre-wrap; background: var(--bg); border: 1px solid var(--bd); border-radius: 2px; padding: 10px; max-height: 180px; overflow-y: auto; line-height: 1.7; color: var(--sub); }
+
+/* ─── Settings ───────────────────────────────────────────────── */
+.s-sec   { border-bottom: 1px solid var(--bd); padding: 20px 0; }
+.s-title { font-size: 10px; color: var(--light); letter-spacing: 0.12em; margin-bottom: 14px; }
+.s-item  { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--bd); }
+.s-item:last-child { border-bottom: none; }
+.s-del   { background: none; border: none; color: var(--light); font-size: 16px; cursor: pointer; padding: 2px 4px; }
+.s-del:active { color: var(--c2); }
+.hint    { font-size: 11px; color: var(--light); margin-top: 6px; letter-spacing: 0.02em; line-height: 1.5; }
+
+/* ─── Buttons ────────────────────────────────────────────────── */
+.btn-line {
+  background: none; border: 1px solid var(--bd);
+  border-radius: 2px; padding: 9px 16px;
+  font-size: 12px; font-family: inherit; font-weight: 400;
+  letter-spacing: 0.06em; color: var(--sub);
+  cursor: pointer; transition: all .15s;
+}
+.btn-line:hover { border-color: var(--sub); color: var(--text); }
+.btn-line.dark  { border-color: var(--text); color: var(--text); }
+.btn-line.danger{ border-color: var(--c2); color: var(--c2); }
+.btn-sm  { padding: 5px 10px; font-size: 11px; }
+.btn-full{ width: 100%; display: block; text-align: center; margin-bottom: 8px; }
+
+/* ─── Swatches ───────────────────────────────────────────────── */
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 6px; }
+.sw { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform .15s; }
+.sw.on { border-color: var(--text); transform: scale(1.2); }
+
+/* ─── Bottom Sheet ───────────────────────────────────────────── */
+.backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.25); z-index: 200; animation: fIn .2s; }
+.sheet {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--card); border-top: 1px solid var(--bd);
+  padding: 20px 20px calc(var(--sb) + 20px);
+  z-index: 201; animation: sUp .22s cubic-bezier(.4,0,.2,1);
+  display: flex; flex-direction: column; gap: 14px;
+}
+.handle    { width: 32px; height: 3px; background: var(--bd); border-radius: 2px; margin: 0 auto -6px; }
+.sh-title  { font-size: 13px; font-weight: 400; letter-spacing: 0.06em; text-align: center; }
+.confirm-msg { font-size: 13px; line-height: 1.6; text-align: center; color: var(--sub); letter-spacing: 0.02em; }
+
+/* ─── Toast ──────────────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: calc(var(--sb) + var(--tab-h) + 12px); left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: var(--text); color: var(--bg);
+  padding: 9px 20px; border-radius: 2px;
+  font-size: 12px; font-weight: 400; letter-spacing: 0.06em;
+  z-index: 9999; opacity: 0; pointer-events: none;
+  transition: opacity .2s, transform .2s; white-space: nowrap;
+}
+.toast.on  { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.ok  { background: var(--c1); }
+.toast.err { background: var(--c2); }
+
+/* ─── Spinner ────────────────────────────────────────────────── */
+.sp { display: inline-block; width: 14px; height: 14px; border: 1.5px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 5px; }
+
+/* ─── Animations ─────────────────────────────────────────────── */
+@keyframes fIn { from { opacity: 0 } to { opacity: 1 } }
+@keyframes sUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
+@keyframes spin { to { transform: rotate(360deg) } }
+
+/* ─── Scrollbar ──────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: var(--bd); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- ═══ HOME SCREEN ═══ -->
+<div id="homeScreen" class="screen">
+  <header class="hd">
+    <div>
+      <div class="hd-title">業務マニュアル</div>
+      <div class="hd-sub" id="manualCount">0 件</div>
+    </div>
+  </header>
+
+  <div class="search-row">
+    <span style="color:var(--light);font-size:13px">🔍</span>
+    <input type="search" placeholder="検索..." oninput="debounceSearch(this.value)">
+  </div>
+
+  <div id="catChips" class="chips"></div>
+
+  <div id="manualList" class="list"></div>
+
+  <div id="emptyState" class="empty" style="display:none">
+    <div class="empty-ico">📋</div>
+    <p>マニュアルがまだありません</p>
+    <button class="btn-line dark" onclick="openCreate()" style="margin-top:8px">+ 新規作成</button>
+  </div>
+
+  <nav class="tab-bar">
+    <button class="tab-item on" id="tabHome" onclick="setTab('home')">
+      <span class="tab-ico">📚</span>
+      <span>マニュアル</span>
+    </button>
+    <button class="tab-create" onclick="openCreate()">＋</button>
+    <button class="tab-item" id="tabSettings" onclick="openSettings()">
+      <span class="tab-ico">⚙</span>
+      <span>設定</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ═══ DETAIL SCREEN ═══ -->
+<div id="detailScreen" class="screen">
+  <header class="nav-hd">
+    <button class="back-btn" onclick="goBack()">← 戻る</button>
+    <span class="nav-title" id="detailNavTitle"></span>
+    <div class="nav-acts">
+      <button class="ico-btn" onclick="editCurrent()">✏️</button>
+      <button class="ico-btn" onclick="deleteCurrent()">🗑️</button>
+    </div>
+  </header>
+  <div class="screen-body">
+    <div class="detail-head">
+      <span id="detailAccent" style="display:inline-block;width:3px;height:16px;border-radius:1px;background:var(--bd);flex-shrink:0"></span>
+      <span id="detailCat" class="detail-cat"></span>
+    </div>
+    <h1 id="detailTitle" class="detail-title"></h1>
+    <div id="detailMeta" class="detail-meta"></div>
+    <div id="detailTags" class="detail-tags"></div>
+    <hr class="divider">
+    <div id="detailContent" class="md"></div>
+  </div>
+</div>
+
+<!-- ═══ EDIT SCREEN ═══ -->
+<div id="editScreen" class="screen">
+  <header class="nav-hd">
+    <button class="btn-cancel" onclick="goBack()">キャンセル</button>
+    <span class="nav-title" id="editNavTitle">新規作成</span>
+    <button class="btn-save" onclick="saveManual()">保存</button>
+  </header>
+  <div class="screen-body edit-body">
+
+    <div class="form-row">
+      <div class="form-label">TITLE</div>
+      <input type="text" id="editTitle" class="fi" placeholder="マニュアルのタイトル">
+    </div>
+
+    <div class="form-row">
+      <div class="form-2col">
+        <div>
+          <div class="form-label">CATEGORY</div>
+          <select id="editCat" class="fi-sel">
+            <option value="">なし</option>
+          </select>
+        </div>
+        <div>
+          <div class="form-label">TAGS（スペース区切り）</div>
+          <input type="text" id="editTags" class="fi" placeholder="重要 研修">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="ed-tabs">
+        <button class="ed-tab on" id="tabEdit" onclick="switchTab('edit')">EDIT</button>
+        <button class="ed-tab" id="tabPrev" onclick="switchTab('preview')">PREVIEW</button>
+      </div>
+      <textarea id="editContent" class="fi-ta" style="margin-top:8px" placeholder="Markdown で記入できます&#10;&#10;## 見出し&#10;- 箇条書き&#10;**太字**  *斜体*"></textarea>
+      <div id="previewBox" class="preview-area md" style="display:none"></div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-label">SCAN（手書き取り込み）</div>
+      <div class="ocr-zone">
+        <div id="ocrEmpty" class="ocr-empty">
+          <span style="font-size:28px;opacity:.3">📷</span>
+          <p class="ocr-hint">画像を選択してテキストを読み取ります</p>
+          <label class="btn-line btn-sm" for="ocrInput" style="cursor:pointer">画像を選ぶ</label>
+          <input type="file" id="ocrInput" accept="image/*" capture="environment" style="display:none" onchange="handleOcrFile(this.files[0])">
+        </div>
+        <div id="ocrLoaded" style="display:none">
+          <img id="ocrImg" class="ocr-img" alt="">
+          <div class="ocr-btns">
+            <button id="ocrRunBtn" class="btn-line dark btn-sm" onclick="runOcr()">🔍 読み取る</button>
+            <button class="btn-line btn-sm" onclick="clearOcr()">クリア</button>
+          </div>
+        </div>
+        <div id="ocrResult" style="display:none">
+          <div class="ocr-rb">
+            <span>読み取り結果</span>
+            <button class="btn-line dark btn-sm" onclick="insertOcr()">エディタに挿入</button>
+          </div>
+          <pre id="ocrPre" class="ocr-pre"></pre>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:20px"></div>
+  </div>
+</div>
+
+<!-- ═══ SETTINGS SCREEN ═══ -->
+<div id="settingsScreen" class="screen">
+  <header class="nav-hd">
+    <button class="back-btn" onclick="goBack()">← 戻る</button>
+    <span class="nav-title">設定</span>
+    <span style="min-width:56px"></span>
+  </header>
+  <div class="screen-body">
+
+    <div class="s-sec">
+      <div class="s-title">OCR — テキスト読み取り</div>
+      <div class="form-label">ANTHROPIC API KEY</div>
+      <input type="password" id="apiKeyInput" class="fi" placeholder="sk-ant-api03-..." style="margin-bottom:6px">
+      <p class="hint">APIキーを設定すると、手書きやスキャン画像からテキストを自動認識できます。</p>
+      <div style="margin-top:12px">
+        <button class="btn-line dark" onclick="saveApiKey()">保存する</button>
+      </div>
+    </div>
+
+    <div class="s-sec">
+      <div class="s-title">カテゴリ管理</div>
+      <div id="catManageList"></div>
+      <div style="margin-top:12px">
+        <button class="btn-line" onclick="openAddCat()">+ カテゴリを追加</button>
+      </div>
+    </div>
+
+    <div class="s-sec">
+      <div class="s-title">データ管理</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn-line btn-full" onclick="exportData()">エクスポート（JSON）</button>
+        <button class="btn-line btn-full" onclick="document.getElementById('importInput').click()">インポート（JSON）</button>
+        <input type="file" id="importInput" accept=".json" style="display:none" onchange="importData(this)">
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ BOTTOM SHEETS ═══ -->
+<div id="backdrop" class="backdrop" style="display:none" onclick="closeSheet()"></div>
+
+<div id="catSheet" class="sheet" style="display:none">
+  <div class="handle"></div>
+  <p class="sh-title">カテゴリを追加</p>
+  <div class="form-row" style="border:none;padding:0">
+    <div class="form-label">NAME</div>
+    <input type="text" id="catNameIn" class="fi" placeholder="例: 接客マナー">
+  </div>
+  <div class="form-2col" style="margin-top:14px">
+    <div>
+      <div class="form-label">ICON</div>
+      <input type="text" id="catIconIn" class="fi" placeholder="📁" maxlength="2" style="font-size:22px;text-align:center">
+    </div>
+    <div>
+      <div class="form-label">COLOR</div>
+      <div id="swatches" class="swatches"></div>
+    </div>
+  </div>
+  <button class="btn-line dark btn-full" style="margin-top:6px" onclick="createCat()">追加する</button>
+</div>
+
+<div id="confirmSheet" class="sheet" style="display:none">
+  <div class="handle"></div>
+  <p id="confirmMsg" class="confirm-msg"></p>
+  <button id="confirmOkBtn" class="btn-line danger btn-full">削除する</button>
+  <button class="btn-line btn-full" style="margin-top:-4px" onclick="closeSheet()">キャンセル</button>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<!-- ═══ SCRIPTS ═══ -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+'use strict';
+
+marked.setOptions({ breaks: true, gfm: true });
+
+/* ─── Colors ────────────────────────────────────────────────────── */
+const CAT_COLORS = [
+  '#c9a84c','#2d6a4f','#c0392b','#2980b9',
+  '#8e44ad','#e67e22','#16a085','#7f8c8d',
+];
+
+/* ─── DB ─────────────────────────────────────────────────────────── */
+const DB_KEY = 'biz_manual_v1';
+const DB = {
+  _g() { try { return JSON.parse(localStorage.getItem(DB_KEY)) || null; } catch { return null; } },
+  _s(d) { localStorage.setItem(DB_KEY, JSON.stringify(d)); },
+  init() {
+    if (!this._g()) {
+      this._s({
+        categories: [
+          {id:1, name:'研修',     icon:'🎓', color:'#c9a84c'},
+          {id:2, name:'日常業務', icon:'💼', color:'#2d6a4f'},
+          {id:3, name:'マニュアル',icon:'📋', color:'#2980b9'},
+          {id:4, name:'メモ',     icon:'📝', color:'#8e44ad'},
+        ],
+        manuals: [],
+        nextCatId: 5,
+        nextManId: 1,
+        settings: { apiKey: '' },
+      });
+    }
+  },
+  cats()     { return this._g().categories; },
+  settings() { return this._g().settings; },
+  manuals(opts = {}) {
+    const d = this._g();
+    const cm = Object.fromEntries(d.categories.map(c => [c.id, c]));
+    let list = d.manuals.map(m => ({...m, category: cm[m.catId] || null}));
+    if (opts.search) {
+      const q = opts.search.toLowerCase();
+      list = list.filter(m =>
+        m.title.toLowerCase().includes(q) ||
+        m.content.toLowerCase().includes(q) ||
+        (m.tags||[]).some(t => t.toLowerCase().includes(q))
+      );
+    }
+    if (opts.catId) list = list.filter(m => m.catId === opts.catId);
+    return list.sort((a,b) => b.updatedAt.localeCompare(a.updatedAt));
+  },
+  getManual(id) {
+    const d = this._g();
+    const m = d.manuals.find(m => m.id === id);
+    return m ? {...m, category: d.categories.find(c => c.id === m.catId) || null} : null;
+  },
+  createManual(data) {
+    const d = this._g();
+    const m = {id: d.nextManId++, title: data.title, content: data.content||'', catId: data.catId||null, tags: data.tags||[], createdAt: iso(), updatedAt: iso()};
+    d.manuals.push(m); this._s(d); return m;
+  },
+  updateManual(id, data) {
+    const d = this._g(); const i = d.manuals.findIndex(m => m.id === id);
+    if (i < 0) return;
+    d.manuals[i] = {...d.manuals[i], ...data, id, updatedAt: iso()}; this._s(d);
+  },
+  deleteManual(id) { const d = this._g(); d.manuals = d.manuals.filter(m => m.id !== id); this._s(d); },
+  createCat(data) { const d = this._g(); const c = {id: d.nextCatId++, ...data}; d.categories.push(c); this._s(d); return c; },
+  deleteCat(id)   {
+    const d = this._g();
+    d.categories = d.categories.filter(c => c.id !== id);
+    d.manuals = d.manuals.map(m => m.catId === id ? {...m, catId: null} : m);
+    this._s(d);
+  },
+  saveSettings(s) { const d = this._g(); d.settings = {...d.settings, ...s}; this._s(d); },
+};
+
+/* ─── Navigation ─────────────────────────────────────────────────── */
+const navStack = [];
+let zIdx = 10;
+function goTo(id) {
+  const el = document.getElementById(id);
+  el.style.zIndex = ++zIdx; el.classList.add('active');
+  navStack.push(id);
+}
+function goBack() {
+  if (!navStack.length) return;
+  const id = navStack.pop();
+  document.getElementById(id).classList.remove('active');
+  zIdx--;
+}
+
+/* ─── State ──────────────────────────────────────────────────────── */
+const S = {
+  filterCatId: null, searchQ: '',
+  currentManual: null, editingId: null,
+  ocrFile: null, ocrText: '',
+  selColor: CAT_COLORS[0], timer: null,
+};
+
+/* ─── Init ───────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  DB.init();
+  initSwatches();
+  renderCatChips();
+  renderManuals();
+});
+
+/* ─── Swipe back (left-edge swipe) ──────────────────────────────── */
+let _tx = 0;
+document.addEventListener('touchstart', e => { _tx = e.touches[0].clientX; }, {passive:true});
+document.addEventListener('touchend', e => {
+  if (navStack.length && e.changedTouches[0].clientX - _tx > 72 && _tx < 28) goBack();
+}, {passive:true});
+
+/* ─── Home ───────────────────────────────────────────────────────── */
+function renderCatChips() {
+  const cats = DB.cats();
+  document.getElementById('catChips').innerHTML =
+    `<button class="chip ${S.filterCatId===null?'on':''}" onclick="filterCat(null)">すべて</button>` +
+    cats.map(c =>
+      `<button class="chip ${S.filterCatId===c.id?'on':''}" onclick="filterCat(${c.id})">${esc(c.icon)} ${esc(c.name)}</button>`
+    ).join('');
+}
+
+function renderManuals() {
+  const list = DB.manuals({search: S.searchQ, catId: S.filterCatId});
+  const listEl  = document.getElementById('manualList');
+  const emptyEl = document.getElementById('emptyState');
+  document.getElementById('manualCount').textContent = `${list.length} 件`;
+  if (!list.length) { listEl.style.display='none'; emptyEl.style.display='flex'; return; }
+  emptyEl.style.display='none'; listEl.style.display='';
+  listEl.innerHTML = list.map(m => {
+    const color  = m.category ? m.category.color : 'var(--bd)';
+    const catTxt = m.category ? `${esc(m.category.icon)} ${esc(m.category.name)}` : '';
+    const excerpt = stripMd(m.content).slice(0, 80);
+    const tagsHtml = (m.tags||[]).slice(0,4).map(t => `<span class="tag">${esc(t)}</span>`).join('');
+    return `
+      <div class="card" onclick="openManual(${m.id})">
+        <div class="card-accent" style="background:${color}"></div>
+        <div class="card-body">
+          ${catTxt ? `<div class="card-cat">${catTxt}</div>` : ''}
+          <div class="card-title">${esc(m.title)}</div>
+          ${excerpt ? `<div class="card-excerpt">${esc(excerpt)}${excerpt.length < m.content.length ? ' …' : ''}</div>` : ''}
+          <div class="card-foot">
+            <div class="card-tags">${tagsHtml}</div>
+            <span class="card-date">${fmtDate(m.updatedAt)}</span>
+            <span class="card-arrow">›</span>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function filterCat(id) { S.filterCatId = id; renderCatChips(); renderManuals(); }
+function debounceSearch(v) { clearTimeout(S.timer); S.timer = setTimeout(() => { S.searchQ = v.trim(); renderManuals(); }, 280); }
+function setTab(t) {
+  document.getElementById('tabHome').classList.toggle('on', t==='home');
+  document.getElementById('tabSettings').classList.toggle('on', t==='settings');
+}
+
+/* ─── Detail ─────────────────────────────────────────────────────── */
+function openManual(id) {
+  S.currentManual = DB.getManual(id);
+  if (!S.currentManual) return;
+  const m = S.currentManual;
+  const color = m.category ? m.category.color : 'var(--bd)';
+
+  document.getElementById('detailAccent').style.background = color;
+  document.getElementById('detailCat').textContent = m.category ? `${m.category.icon} ${m.category.name}` : '';
+  document.getElementById('detailNavTitle').textContent = m.title;
+  document.getElementById('detailTitle').textContent = m.title;
+  document.getElementById('detailMeta').textContent = `更新 ${fmtDate(m.updatedAt)}`;
+  document.getElementById('detailTags').innerHTML = (m.tags||[]).map(t => `<span class="detail-tag">${esc(t)}</span>`).join('');
+  document.getElementById('detailContent').innerHTML = m.content ? marked.parse(m.content) : '<p style="color:var(--light)">内容がありません</p>';
+  goTo('detailScreen');
+}
+
+function editCurrent()   { goBack(); openEdit(S.currentManual); }
+function deleteCurrent() {
+  showConfirm(`「${S.currentManual.title}」を削除しますか？`, () => {
+    DB.deleteManual(S.currentManual.id);
+    goBack();
+    renderManuals(); renderCatChips();
+    showToast('削除しました', 'ok');
+  });
+}
+
+/* ─── Create / Edit ──────────────────────────────────────────────── */
+function openCreate() {
+  S.editingId = null;
+  document.getElementById('editNavTitle').textContent = '新規作成';
+  document.getElementById('editTitle').value   = '';
+  document.getElementById('editContent').value = '';
+  document.getElementById('editTags').value    = '';
+  refreshCatSel(null);
+  switchTab('edit');
+  clearOcr();
+  goTo('editScreen');
+}
+
+function openEdit(m) {
+  S.editingId = m.id;
+  document.getElementById('editNavTitle').textContent = '編集';
+  document.getElementById('editTitle').value   = m.title;
+  document.getElementById('editContent').value = m.content;
+  document.getElementById('editTags').value    = (m.tags||[]).join(' ');
+  refreshCatSel(m.catId);
+  switchTab('edit');
+  clearOcr();
+  goTo('editScreen');
+}
+
+function refreshCatSel(sel) {
+  document.getElementById('editCat').innerHTML =
+    '<option value="">カテゴリなし</option>' +
+    DB.cats().map(c => `<option value="${c.id}" ${c.id===sel?'selected':''}>${esc(c.icon)} ${esc(c.name)}</option>`).join('');
+}
+
+function switchTab(t) {
+  const ta = document.getElementById('editContent');
+  const pb = document.getElementById('previewBox');
+  const te = document.getElementById('tabEdit');
+  const tp = document.getElementById('tabPrev');
+  if (t==='preview') {
+    pb.innerHTML = ta.value ? marked.parse(ta.value) : '<p style="color:var(--light)">内容がありません</p>';
+    ta.style.display='none'; pb.style.display='';
+    te.classList.remove('on'); tp.classList.add('on');
+  } else {
+    ta.style.display=''; pb.style.display='none';
+    te.classList.add('on'); tp.classList.remove('on');
+    ta.focus();
+  }
+}
+
+function saveManual() {
+  const title = document.getElementById('editTitle').value.trim();
+  if (!title) { document.getElementById('editTitle').focus(); showToast('タイトルを入力してください','err'); return; }
+  const tags  = document.getElementById('editTags').value.split(/[,、　\s]+/).map(t=>t.trim()).filter(Boolean);
+  const catV  = document.getElementById('editCat').value;
+  const data  = { title, content: document.getElementById('editContent').value, catId: catV ? parseInt(catV) : null, tags };
+  if (S.editingId) { DB.updateManual(S.editingId, data); showToast('保存しました','ok'); }
+  else             { DB.createManual(data); showToast('作成しました','ok'); }
+  goBack();
+  renderManuals(); renderCatChips();
+}
+
+/* ─── OCR ────────────────────────────────────────────────────────── */
+function handleOcrFile(file) {
+  if (!file) return;
+  S.ocrFile = file;
+  const r = new FileReader();
+  r.onload = e => { document.getElementById('ocrImg').src = e.target.result; };
+  r.readAsDataURL(file);
+  document.getElementById('ocrEmpty').style.display  = 'none';
+  document.getElementById('ocrLoaded').style.display = '';
+  document.getElementById('ocrResult').style.display = 'none';
+  S.ocrText = '';
+}
+
+async function runOcr() {
+  const {apiKey} = DB.settings();
+  if (!apiKey) { showToast('設定でAPIキーを登録してください','err'); openSettings(); return; }
+  const btn = document.getElementById('ocrRunBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="sp"></span>読み取り中...';
+  try {
+    const b64  = await toB64(S.ocrFile);
+    const mime = S.ocrFile.type || 'image/jpeg';
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 4096,
+        messages: [{role:'user', content:[
+          {type:'image', source:{type:'base64', media_type:mime, data:b64}},
+          {type:'text', text:'この画像のテキストをMarkdown形式で書き起こしてください。見出しは##、箇条書きは-を使って整形し、読み取ったテキストのみ出力してください。'},
+        ]}],
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || `HTTP ${res.status}`);
+    S.ocrText = data.content[0].text;
+    document.getElementById('ocrPre').textContent = S.ocrText;
+    document.getElementById('ocrResult').style.display = '';
+    showToast('読み取り完了','ok');
+  } catch(e) { showToast('エラー: ' + e.message,'err'); }
+  finally    { btn.disabled=false; btn.innerHTML='🔍 読み取る'; }
+}
+
+function insertOcr() {
+  if (!S.ocrText) return;
+  const ta = document.getElementById('editContent');
+  ta.value += (ta.value && !ta.value.endsWith('\n') ? '\n\n' : '') + S.ocrText;
+  switchTab('edit');
+  showToast('挿入しました','ok');
+}
+
+function clearOcr() {
+  S.ocrFile=null; S.ocrText='';
+  document.getElementById('ocrInput').value = '';
+  document.getElementById('ocrImg').src = '';
+  document.getElementById('ocrEmpty').style.display  = '';
+  document.getElementById('ocrLoaded').style.display = 'none';
+  document.getElementById('ocrResult').style.display = 'none';
+}
+
+function toB64(file) {
+  return new Promise((res,rej) => { const r=new FileReader(); r.onload=e=>res(e.target.result.split(',')[1]); r.onerror=rej; r.readAsDataURL(file); });
+}
+
+/* ─── Settings ───────────────────────────────────────────────────── */
+function openSettings() {
+  setTab('settings');
+  document.getElementById('apiKeyInput').value = DB.settings().apiKey || '';
+  renderCatManageList();
+  goTo('settingsScreen');
+}
+
+function saveApiKey() {
+  DB.saveSettings({apiKey: document.getElementById('apiKeyInput').value.trim()});
+  showToast('保存しました','ok');
+}
+
+function renderCatManageList() {
+  const cats = DB.cats();
+  const el   = document.getElementById('catManageList');
+  if (!cats.length) { el.innerHTML = '<p style="font-size:12px;color:var(--light);padding:4px 0">カテゴリがありません</p>'; return; }
+  el.innerHTML = cats.map(c =>
+    `<div class="s-item">
+      <span style="display:flex;align-items:center;gap:8px">
+        <span style="width:10px;height:10px;border-radius:50%;background:${c.color};display:inline-block"></span>
+        <span style="letter-spacing:0.02em">${esc(c.icon)} ${esc(c.name)}</span>
+      </span>
+      <button class="s-del" onclick="confirmDelCat(${c.id},'${esc(c.name).replace(/'/g,"\\'")}')">×</button>
+    </div>`
+  ).join('');
+}
+
+function confirmDelCat(id, name) {
+  showConfirm(`「${name}」を削除しますか？\nこのカテゴリのマニュアルはカテゴリなしになります。`, () => {
+    if (S.filterCatId===id) S.filterCatId=null;
+    DB.deleteCat(id);
+    renderCatManageList(); renderCatChips(); renderManuals();
+    showToast('削除しました','ok');
+  });
+}
+
+function exportData() {
+  const blob = new Blob([localStorage.getItem(DB_KEY)], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), {
+    href: url,
+    download: `manual_${new Date().toLocaleDateString('ja-JP').replace(/\//g,'-')}.json`
+  });
+  a.click(); URL.revokeObjectURL(url);
+  showToast('エクスポートしました','ok');
+}
+
+function importData(input) {
+  const file = input.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try { JSON.parse(e.target.result); localStorage.setItem(DB_KEY, e.target.result); showToast('インポート完了','ok'); setTimeout(()=>location.reload(),1200); }
+    catch { showToast('無効なファイルです','err'); }
+  };
+  r.readAsText(file); input.value='';
+}
+
+/* ─── Categories ─────────────────────────────────────────────────── */
+function openAddCat() {
+  document.getElementById('catNameIn').value='';
+  document.getElementById('catIconIn').value='';
+  S.selColor=CAT_COLORS[0]; updateSwatches();
+  openSheet('catSheet');
+}
+
+function createCat() {
+  const name = document.getElementById('catNameIn').value.trim();
+  if (!name) { document.getElementById('catNameIn').focus(); return; }
+  const icon = document.getElementById('catIconIn').value.trim() || '📁';
+  DB.createCat({name, icon, color: S.selColor});
+  closeSheet();
+  renderCatManageList(); renderCatChips(); renderManuals(); refreshCatSel(null);
+  showToast(`「${name}」を追加しました`,'ok');
+}
+
+/* ─── Swatches ───────────────────────────────────────────────────── */
+function initSwatches() {
+  document.getElementById('swatches').innerHTML =
+    CAT_COLORS.map((c,i) =>
+      `<div class="sw ${i===0?'on':''}" style="background:${c}" onclick="selectColor('${c}',this)"></div>`
+    ).join('');
+}
+function selectColor(c) { S.selColor=c; updateSwatches(); }
+function updateSwatches() {
+  document.querySelectorAll('.sw').forEach((el,i) => el.classList.toggle('on', CAT_COLORS[i]===S.selColor));
+}
+
+/* ─── Sheets ─────────────────────────────────────────────────────── */
+function openSheet(id) { document.getElementById('backdrop').style.display=''; document.getElementById(id).style.display='flex'; }
+function closeSheet()  { document.getElementById('backdrop').style.display='none'; document.querySelectorAll('.sheet').forEach(s=>s.style.display='none'); }
+function showConfirm(msg, onOk) {
+  document.getElementById('confirmMsg').textContent = msg;
+  const btn=document.getElementById('confirmOkBtn'), clone=btn.cloneNode(true); btn.replaceWith(clone);
+  clone.addEventListener('click',()=>{closeSheet();onOk();});
+  openSheet('confirmSheet');
+}
+
+/* ─── Toast ──────────────────────────────────────────────────────── */
+let _tt;
+function showToast(msg, type='') {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className=`toast ${type} on`;
+  clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('on'),2600);
+}
+
+/* ─── Utils ──────────────────────────────────────────────────────── */
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function stripMd(t) {
+  return (t||'').replace(/#{1,6}\s+/g,'').replace(/\*\*(.+?)\*\*/g,'$1').replace(/\*(.+?)\*/g,'$1')
+    .replace(/`+[^`]*`+/g,'').replace(/\[(.+?)\]\(.+?\)/g,'$1')
+    .replace(/^[-*+]\s+/gm,'').replace(/^\d+\.\s+/gm,'').replace(/\n+/g,' ').trim();
+}
+function fmtDate(iso) { return new Date(iso).toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'}); }
+function iso() { return new Date().toISOString(); }
+</script>
+</body>
+</html>
