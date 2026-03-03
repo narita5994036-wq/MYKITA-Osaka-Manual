@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: mykita-osaka-manual
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1
+    # データを永続化するにはディスクを追加 (Starterプラン以上が必要)
+    # disk:
+    #   name: db
+    #   mountPath: /var/data
+    #   sizeGB: 1
+    envVars:
+      - key: DATA_DIR
+        value: /opt/render/project/src
+      - key: ANTHROPIC_API_KEY
+        sync: false   # Renderダッシュボードで手動設定

@@ -5,7 +5,11 @@ import os
 import base64
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///manuals.db'
+
+# DB path — set DATA_DIR env var to a persistent mount (e.g. /var/data on Render)
+_data_dir = os.environ.get('DATA_DIR', os.path.dirname(os.path.abspath(__file__)))
+os.makedirs(_data_dir, exist_ok=True)
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(_data_dir, "manuals.db")}'
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -242,8 +246,11 @@ def seed_defaults():
         db.session.commit()
 
 
+# Initialize DB on startup (works for both gunicorn and direct execution)
+with app.app_context():
+    db.create_all()
+    seed_defaults()
+
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        seed_defaults()
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)
