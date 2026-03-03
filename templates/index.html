@@ -190,13 +190,14 @@
                 <circle cx="12" cy="13" r="4"/>
               </svg>
             </span>
-            <p>スキャン画像をドラッグ&ドロップ</p>
+            <p>スキャン画像・PDF をドラッグ&ドロップ</p>
             <p class="muted-text">または</p>
             <label class="btn-secondary" for="ocrFileInput">ファイルを選択</label>
-            <input type="file" id="ocrFileInput" accept="image/*" style="display:none" onchange="handleOCRFile(this.files[0])">
+            <input type="file" id="ocrFileInput" accept="image/*,application/pdf" style="display:none" onchange="handleOCRFile(this.files[0])">
           </div>
           <div id="ocrLoaded" style="display:none">
             <img id="ocrPreviewImg" class="ocr-preview-img" alt="プレビュー">
+            <div id="ocrPdfLabel" class="ocr-pdf-label" style="display:none"></div>
             <div class="ocr-controls">
               <button class="btn-primary" id="ocrRunBtn" onclick="runOCR()">テキストを読み取る</button>
               <button class="btn-secondary" onclick="clearOCR()">✕ クリア</button>

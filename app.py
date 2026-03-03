@@ -176,19 +176,30 @@ def delete_manual(manual_id):
 
 # ── OCR ──────────────────────────────────────────────────────────────────────
 
+_OCR_PROMPT = (
+    'この資料を日本語の Markdown 形式でまとめてください。\n\n'
+    '- 英語・ドイツ語など日本語以外のテキストは、すべて自然な日本語に翻訳する\n'
+    '- 見出しは ## / ###、箇条書きは -、表は Markdown テーブル形式で整形する\n'
+    '- 図・写真・グラフが含まれる箇所は「> 📷 （図の内容説明）」の形式で内容を説明する\n'
+    '- 出力は変換後のテキストのみ（前置き・後書き・コードブロック記号は不要）\n'
+)
+
+
 @app.route('/api/ocr', methods=['POST'])
 def ocr_image():
     if 'image' not in request.files:
-        return jsonify({'error': '画像ファイルが見つかりません'}), 400
+        return jsonify({'error': 'ファイルが見つかりません'}), 400
     file = request.files['image']
     if not file.filename:
         return jsonify({'error': 'ファイルが選択されていません'}), 400
 
-    image_data = file.read()
-    image_base64 = base64.standard_b64encode(image_data).decode('utf-8')
+    file_data = file.read()
+    file_base64 = base64.standard_b64encode(file_data).decode('utf-8')
 
     fname = file.filename.lower()
-    if fname.endswith('.png'):
+    if fname.endswith('.pdf'):
+        media_type = 'application/pdf'
+    elif fname.endswith('.png'):
         media_type = 'image/png'
     elif fname.endswith('.gif'):
         media_type = 'image/gif'
@@ -200,32 +211,47 @@ def ocr_image():
     try:
         import anthropic
         client = anthropic.Anthropic()
-        message = client.messages.create(
-            model='claude-haiku-4-5-20251001',
-            max_tokens=4096,
-            messages=[{
-                'role': 'user',
-                'content': [
-                    {
-                        'type': 'image',
-                        'source': {
-                            'type': 'base64',
-                            'media_type': media_type,
-                            'data': image_base64,
+
+        if media_type == 'application/pdf':
+            message = client.beta.messages.create(
+                model='claude-haiku-4-5-20251001',
+                max_tokens=4096,
+                betas=['pdfs-2024-09-25'],
+                messages=[{
+                    'role': 'user',
+                    'content': [
+                        {
+                            'type': 'document',
+                            'source': {
+                                'type': 'base64',
+                                'media_type': 'application/pdf',
+                                'data': file_base64,
+                            },
                         },
-                    },
-                    {
-                        'type': 'text',
-                        'text': (
-                            'この画像に書かれているテキストを読み取り、Markdown形式で書き起こしてください。'
-                            '手書きのメモや文書の場合、できるだけ正確に文字を認識してください。'
-                            '見出しは ## や ###、箇条書きは - を使って整形してください。'
-                            '読み取ったテキストのみを出力し、前置きや説明は一切不要です。'
-                        ),
-                    },
-                ],
-            }],
-        )
+                        {'type': 'text', 'text': _OCR_PROMPT},
+                    ],
+                }],
+            )
+        else:
+            message = client.messages.create(
+                model='claude-haiku-4-5-20251001',
+                max_tokens=4096,
+                messages=[{
+                    'role': 'user',
+                    'content': [
+                        {
+                            'type': 'image',
+                            'source': {
+                                'type': 'base64',
+                                'media_type': media_type,
+                                'data': file_base64,
+                            },
+                        },
+                        {'type': 'text', 'text': _OCR_PROMPT},
+                    ],
+                }],
+            )
+
         return jsonify({'transcription': message.content[0].text})
     except Exception as exc:
         return jsonify({'error': f'OCR処理中にエラーが発生しました: {exc}'}), 500

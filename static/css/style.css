@@ -539,6 +539,23 @@ body {
   line-height: 1.7;
 }
 
+/* ─── OCR PDF Label ──────────────────────────── */
+
+.ocr-pdf-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: var(--radius-sm);
+  color: #1D4ED8;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 20px 16px;
+  text-align: center;
+  word-break: break-all;
+}
+
 /* ─── Color Swatches ─────────────────────────── */
 
 .color-swatches {
