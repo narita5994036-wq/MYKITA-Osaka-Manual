@@ -71,8 +71,9 @@ const api = {
     const fd = new FormData();
     fd.append('image', file);
     const res = await fetch('/api/ocr', { method: 'POST', body: fd });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'OCRエラー');
+    let data;
+    try { data = await res.json(); } catch { throw new Error(`サーバーエラー (${res.status})`); }
+    if (!res.ok) throw new Error(data.error || `OCRエラー (${res.status})`);
     return data;
   },
 };

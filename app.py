@@ -11,11 +11,16 @@ _data_dir = os.environ.get('DATA_DIR', os.path.dirname(os.path.abspath(__file__)
 os.makedirs(_data_dir, exist_ok=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(_data_dir, "manuals.db")}'
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024  # 32MB
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+
+@app.errorhandler(413)
+def too_large(_e):
+    return jsonify({'error': 'ファイルが大きすぎます（最大 32MB）'}), 413
 
 
 class Category(db.Model):
@@ -212,26 +217,33 @@ def ocr_image():
         import anthropic
         client = anthropic.Anthropic()
 
+        pdf_content = [
+            {
+                'type': 'document',
+                'source': {
+                    'type': 'base64',
+                    'media_type': 'application/pdf',
+                    'data': file_base64,
+                },
+            },
+            {'type': 'text', 'text': _OCR_PROMPT},
+        ]
         if media_type == 'application/pdf':
-            message = client.beta.messages.create(
-                model='claude-haiku-4-5-20251001',
-                max_tokens=4096,
-                betas=['pdfs-2024-09-25'],
-                messages=[{
-                    'role': 'user',
-                    'content': [
-                        {
-                            'type': 'document',
-                            'source': {
-                                'type': 'base64',
-                                'media_type': 'application/pdf',
-                                'data': file_base64,
-                            },
-                        },
-                        {'type': 'text', 'text': _OCR_PROMPT},
-                    ],
-                }],
-            )
+            try:
+                message = client.beta.messages.create(
+                    model='claude-haiku-4-5-20251001',
+                    max_tokens=4096,
+                    betas=['pdfs-2024-09-25'],
+                    messages=[{'role': 'user', 'content': pdf_content}],
+                )
+            except Exception:
+                # Fallback: some SDK versions expose PDF support via extra_headers
+                message = client.messages.create(
+                    model='claude-haiku-4-5-20251001',
+                    max_tokens=4096,
+                    messages=[{'role': 'user', 'content': pdf_content}],
+                    extra_headers={'anthropic-beta': 'pdfs-2024-09-25'},
+                )
         else:
             message = client.messages.create(
                 model='claude-haiku-4-5-20251001',
