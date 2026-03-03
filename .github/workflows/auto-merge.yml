@@ -19,34 +19,29 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create Pull Request
-        id: create-pr
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          base: master
-          branch: ${{ github.ref_name }}
-          title: "Auto merge: ${{ github.ref_name }} → master"
-          body: |
-            このPRはClaude Codeセッションからの自動マージリクエストです。
-
-            - ブランチ: `${{ github.ref_name }}`
-            - コミット: ${{ github.sha }}
-          delete-branch: false
-
-      - name: Auto Merge Pull Request
-        if: steps.create-pr.outputs.pull-request-number
-        uses: peter-evans/enable-pull-request-automerge@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          pull-request-number: ${{ steps.create-pr.outputs.pull-request-number }}
-          merge-method: merge
-
-      - name: Direct Merge to Master
-        if: steps.create-pr.outputs.pull-request-number == ''
+      - name: Configure git
         run: |
-          git config user.name "GitHub Actions"
+          git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
+
+      - name: Merge to master
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          echo "Merging $BRANCH into master"
+
+          # Fetch all branches
+          git fetch origin master
+
+          # Switch to master
           git checkout master
-          git merge --no-ff ${{ github.ref_name }} -m "Auto merge: ${{ github.ref_name }} → master"
+
+          # Merge the claude branch
+          git merge --no-ff "origin/$BRANCH" -m "Auto merge: $BRANCH → master
+
+          Triggered by push to $BRANCH
+          Commit: ${{ github.sha }}"
+
+          # Push to master
           git push origin master
+
+          echo "Successfully merged $BRANCH into master"
