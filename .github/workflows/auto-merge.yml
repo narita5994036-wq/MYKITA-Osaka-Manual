@@ -1,0 +1,52 @@
+name: Auto Merge Claude Branch to Master
+
+on:
+  push:
+    branches:
+      - 'claude/**'
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Pull Request
+        id: create-pr
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: master
+          branch: ${{ github.ref_name }}
+          title: "Auto merge: ${{ github.ref_name }} → master"
+          body: |
+            このPRはClaude Codeセッションからの自動マージリクエストです。
+
+            - ブランチ: `${{ github.ref_name }}`
+            - コミット: ${{ github.sha }}
+          delete-branch: false
+
+      - name: Auto Merge Pull Request
+        if: steps.create-pr.outputs.pull-request-number
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pull-request-number: ${{ steps.create-pr.outputs.pull-request-number }}
+          merge-method: merge
+
+      - name: Direct Merge to Master
+        if: steps.create-pr.outputs.pull-request-number == ''
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git checkout master
+          git merge --no-ff ${{ github.ref_name }} -m "Auto merge: ${{ github.ref_name }} → master"
+          git push origin master
