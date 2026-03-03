@@ -501,10 +501,10 @@ function handleDrop(e) {
   e.preventDefault();
   document.getElementById('ocrZone').classList.remove('drag-over');
   const file = e.dataTransfer.files[0];
-  if (file && file.type.startsWith('image/')) {
+  if (file && (file.type.startsWith('image/') || file.type === 'application/pdf')) {
     handleOCRFile(file);
   } else {
-    showToast('画像ファイルをドロップしてください', 'error');
+    showToast('画像または PDF ファイルをドロップしてください', 'error');
   }
 }
 
@@ -512,11 +512,21 @@ function handleOCRFile(file) {
   if (!file) return;
   state.ocrFile = file;
 
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    document.getElementById('ocrPreviewImg').src = e.target.result;
-  };
-  reader.readAsDataURL(file);
+  const isPdf = file.type === 'application/pdf';
+  const imgEl   = document.getElementById('ocrPreviewImg');
+  const labelEl = document.getElementById('ocrPdfLabel');
+
+  if (isPdf) {
+    imgEl.style.display   = 'none';
+    labelEl.style.display = '';
+    labelEl.textContent   = `📄 ${file.name}`;
+  } else {
+    labelEl.style.display = 'none';
+    imgEl.style.display   = '';
+    const reader = new FileReader();
+    reader.onload = (e) => { imgEl.src = e.target.result; };
+    reader.readAsDataURL(file);
+  }
 
   document.getElementById('ocrEmpty').style.display  = 'none';
   document.getElementById('ocrLoaded').style.display = '';
@@ -560,8 +570,10 @@ function insertOCRText() {
 function clearOCR() {
   state.ocrFile = null;
   state.ocrText = '';
-  document.getElementById('ocrFileInput').value  = '';
-  document.getElementById('ocrPreviewImg').src   = '';
+  document.getElementById('ocrFileInput').value      = '';
+  document.getElementById('ocrPreviewImg').src        = '';
+  document.getElementById('ocrPreviewImg').style.display = '';
+  document.getElementById('ocrPdfLabel').style.display   = 'none';
   document.getElementById('ocrEmpty').style.display  = '';
   document.getElementById('ocrLoaded').style.display = 'none';
   document.getElementById('ocrResult').style.display = 'none';
