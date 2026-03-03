@@ -14,7 +14,12 @@
   <!-- ═══ SIDEBAR ═══ -->
   <aside class="sidebar">
     <div class="sidebar-logo">
-      <span class="logo-icon">📚</span>
+      <span class="logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
+      </span>
       <span class="logo-text">業務マニュアル</span>
     </div>
 
@@ -23,14 +28,18 @@
     </button>
 
     <div class="search-wrap">
-      <span class="search-icon">🔍</span>
+      <span class="search-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </span>
       <input type="search" id="searchInput" placeholder="マニュアルを検索..." oninput="debounceSearch(this.value)">
     </div>
 
     <nav class="sidebar-nav">
       <p class="nav-label">カテゴリ</p>
       <div class="nav-item active" id="nav-all" onclick="filterCategory(null)">
-        <span>📚 すべて</span>
+        <span>すべて</span>
         <span class="badge" id="badge-all">0</span>
       </div>
       <div id="categoryList"></div>
@@ -53,7 +62,15 @@
     <div id="manualGrid" class="manual-grid"></div>
 
     <div id="emptyState" class="empty-state" style="display:none">
-      <div class="empty-icon">📝</div>
+      <div class="empty-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </div>
       <p>マニュアルがまだありません</p>
       <button class="btn-primary" onclick="openCreateModal()">最初のマニュアルを作成する</button>
     </div>
@@ -66,8 +83,18 @@
     <div class="modal-topbar">
       <span id="detail-cat-badge" class="cat-badge"></span>
       <div class="modal-actions">
-        <button class="icon-btn" onclick="editCurrentManual()" title="編集">✏️</button>
-        <button class="icon-btn icon-btn-danger" onclick="deleteCurrentManual()" title="削除">🗑️</button>
+        <button class="icon-btn" onclick="editCurrentManual()" title="編集">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </button>
+        <button class="icon-btn icon-btn-danger" onclick="deleteCurrentManual()" title="削除">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+          </svg>
+        </button>
         <button class="icon-btn" onclick="closeModal('detailOverlay')" title="閉じる">✕</button>
       </div>
     </div>
@@ -116,19 +143,45 @@
             <button class="editor-tab" id="tab-preview" onclick="setEditorMode('preview')">プレビュー</button>
           </div>
         </div>
-        <textarea id="editContent" class="form-textarea" placeholder="Markdown形式で記入できます&#10;&#10;## 見出し&#10;- 箇条書き&#10;**太字** *斜体*"></textarea>
+        <div class="editor-wrap">
+          <div id="formatToolbar" class="format-toolbar">
+            <div class="toolbar-group">
+              <button type="button" class="toolbar-btn" data-format="h1" onclick="applyBlockFormat('h1')" title="見出し1">H1</button>
+              <button type="button" class="toolbar-btn" data-format="h2" onclick="applyBlockFormat('h2')" title="見出し2">H2</button>
+              <button type="button" class="toolbar-btn" data-format="h3" onclick="applyBlockFormat('h3')" title="見出し3">H3</button>
+              <button type="button" class="toolbar-btn" data-format="h4" onclick="applyBlockFormat('h4')" title="見出し4">H4</button>
+            </div>
+            <div class="toolbar-sep"></div>
+            <div class="toolbar-group">
+              <button type="button" class="toolbar-btn" data-format="body" onclick="applyBlockFormat('body')" title="本文">本文</button>
+              <button type="button" class="toolbar-btn" data-format="caption" onclick="applyBlockFormat('caption')" title="キャプション">キャプション</button>
+            </div>
+            <div class="toolbar-sep"></div>
+            <div class="toolbar-group">
+              <button type="button" class="toolbar-btn toolbar-bold" onclick="applyInlineFormat('bold')" title="太字">B</button>
+              <button type="button" class="toolbar-btn toolbar-italic" onclick="applyInlineFormat('italic')" title="斜体">I</button>
+              <button type="button" class="toolbar-btn toolbar-mark" onclick="applyInlineFormat('mark')" title="マーカー">A</button>
+            </div>
+          </div>
+          <textarea id="editContent" class="form-textarea" placeholder="ツールバーで書式を設定しながら入力できます。&#10;&#10;例：見出しにしたい行にカーソルを置いて H1〜H4 を押す&#10;   選択したテキストに B（太字）・I（斜体）・A（マーカー）を適用する"></textarea>
+        </div>
         <div id="editPreview" class="markdown-body preview-area" style="display:none"></div>
       </div>
 
       <!-- OCR Section -->
       <div class="form-group">
-        <label class="form-label">📸 手書きメモの取り込み</label>
+        <label class="form-label">手書きメモの取り込み</label>
         <div class="ocr-zone" id="ocrZone"
              ondragover="handleDragOver(event)"
              ondragleave="handleDragLeave(event)"
              ondrop="handleDrop(event)">
           <div id="ocrEmpty" class="ocr-empty">
-            <span class="ocr-icon">📷</span>
+            <span class="ocr-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+            </span>
             <p>スキャン画像をドラッグ&ドロップ</p>
             <p class="muted-text">または</p>
             <label class="btn-secondary" for="ocrFileInput">ファイルを選択</label>
@@ -137,7 +190,7 @@
           <div id="ocrLoaded" style="display:none">
             <img id="ocrPreviewImg" class="ocr-preview-img" alt="プレビュー">
             <div class="ocr-controls">
-              <button class="btn-primary" id="ocrRunBtn" onclick="runOCR()">🔍 テキストを読み取る</button>
+              <button class="btn-primary" id="ocrRunBtn" onclick="runOCR()">テキストを読み取る</button>
               <button class="btn-secondary" onclick="clearOCR()">✕ クリア</button>
             </div>
           </div>
@@ -154,7 +207,7 @@
     </div><!-- /modal-body -->
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('editOverlay')">キャンセル</button>
-      <button class="btn-primary" onclick="saveManual()">💾 保存する</button>
+      <button class="btn-primary" onclick="saveManual()">保存する</button>
     </div>
   </div>
 </div>
@@ -174,7 +227,7 @@
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">アイコン</label>
-          <input type="text" id="catIcon" class="form-input icon-input" placeholder="📁" maxlength="2">
+          <input type="text" id="catIcon" class="form-input icon-input" placeholder="■" maxlength="2">
         </div>
         <div class="form-group">
           <label class="form-label">カラー</label>
